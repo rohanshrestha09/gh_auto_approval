@@ -14,9 +14,9 @@ app = FastAPI()
 
 
 slack_service = SlackService()
-handler = slack_service.get_handler()
+slack_handler = slack_service.get_handler()
 
 
 @app.post("/slack/events")
 async def slack_events(request: Request):
-    return await handler.handle(request)
+    return await slack_handler.handle(request)
