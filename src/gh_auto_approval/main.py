@@ -1,3 +1,4 @@
+import subprocess
 import logging
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
@@ -20,6 +21,21 @@ slack_handler = slack_service.get_handler()
 @app.get("/")
 async def root():
     return "Hello, World!"
+
+
+@app.get("/gh")
+async def gh_health():
+    r = subprocess.run(
+        ["curl", "-v", "https://api.github.com"],
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    return {
+        "stdout": r.stdout,
+        "stderr": r.stderr,
+        "code": r.returncode,
+    }
 
 
 @app.post("/slack/events")

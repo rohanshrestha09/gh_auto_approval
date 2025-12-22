@@ -1,5 +1,4 @@
-import subprocess
-import json
+import httpx
 from dataclasses import dataclass
 
 from configs.setting import Settings
@@ -19,45 +18,21 @@ class GithubService:
 
     def approve_pull_request(self, pr: PullRequestRef) -> ApprovalResult:
         url = f"https://api.github.com/repos/{pr.owner}/{pr.repo}/pulls/{pr.number}/reviews"
-        payload = json.dumps({"event": "APPROVE"})
-
-        cmd = [
-            "curl",
-            "-sS",
-            "-X",
-            "POST",
-            url,
-            "-H",
-            f"Authorization: Bearer {self._settings.github_token}",
-            "-H",
-            "Accept: application/vnd.github+json",
-            "-H",
-            "Content-Type: application/json",
-            "-H",
-            "X-GitHub-Api-Version: 2022-11-28",
-            "--connect-timeout",
-            "5",
-            "--max-time",
-            "20",
-        ]
+        headers = {
+            "Authorization": f"Bearer {self._settings.github_token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "Connection": "close",
+        }
+        payload = {"event": "APPROVE"}
 
         try:
-            result = subprocess.run(
-                cmd,
-                input=payload,
-                text=True,
-                capture_output=True,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                return ApprovalResult(pr=pr, ok=True, detail="approved")
-
-            return ApprovalResult(
-                pr=pr,
-                ok=False,
-                detail=f"curl failed: {result.stderr}",
-            )
-
-        except Exception as exc:
+            with httpx.Client(timeout=20) as client:
+                response = client.post(url, headers=headers, json=payload)
+                if response.status_code in (200, 201):
+                    return ApprovalResult(pr=pr, ok=True, detail="approved")
+                return ApprovalResult(
+                    pr=pr, ok=False, detail=f"{response.status_code}: {response.text}"
+                )
+        except httpx.HTTPError as exc:
             return ApprovalResult(pr=pr, ok=False, detail=f"request failed: {exc}")
