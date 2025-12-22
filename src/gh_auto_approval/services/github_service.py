@@ -28,10 +28,14 @@ class GithubService:
             read=3,
             backoff_factor=0.5,
             status_forcelist=[500, 502, 503, 504],
-            allowed_methods=frozenset(["POST"]),
+            allowed_methods=None,
             raise_on_status=False,
         )
-        adapter = HTTPAdapter(max_retries=retry, pool_maxsize=2, pool_block=True)
+        adapter = HTTPAdapter(
+            max_retries=retry,
+            pool_connections=1,
+            pool_maxsize=1,
+        )
         session.mount("https://", adapter)
         session.mount("http://", adapter)
         return session
@@ -45,14 +49,15 @@ class GithubService:
             "Connection": "close",
         }
         payload = {"event": "APPROVE"}
+
         try:
-            response = self._session.post(
-                url, headers=headers, json=payload, timeout=(5, 20)
-            )
-            if response.status_code in (200, 201):
-                return ApprovalResult(pr=pr, ok=True, detail="approved")
-            return ApprovalResult(
-                pr=pr, ok=False, detail=f"{response.status_code}: {response.text}"
-            )
+            with self._session.post(
+                url, headers=headers, json=payload, timeout=(5, 20),
+            ) as response:
+                if response.status_code in (200, 201):
+                    return ApprovalResult(pr=pr, ok=True, detail="approved")
+                return ApprovalResult(
+                    pr=pr, ok=False, detail=f"{response.status_code}: {response.text}"
+                )
         except requests.RequestException as exc:
             return ApprovalResult(pr=pr, ok=False, detail=f"request failed: {exc}")
