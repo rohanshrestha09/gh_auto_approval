@@ -1,4 +1,6 @@
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from dataclasses import dataclass
 
 from configs.setting import Settings
@@ -15,7 +17,24 @@ class ApprovalResult:
 class GithubService:
     def __init__(self):
         self._settings = Settings.from_env()
-        self._session = requests.Session()
+        self._session = self._build_session()
+
+    @staticmethod
+    def _build_session() -> requests.Session:
+        session = requests.Session()
+        retry = Retry(
+            total=3,
+            connect=3,
+            read=3,
+            backoff_factor=0.5,
+            status_forcelist=[500, 502, 503, 504],
+            allowed_methods=frozenset(["POST"]),
+            raise_on_status=False,
+        )
+        adapter = HTTPAdapter(max_retries=retry, pool_maxsize=2, pool_block=True)
+        session.mount("https://", adapter)
+        session.mount("http://", adapter)
+        return session
 
     def approve_pull_request(self, pr: PullRequestRef) -> ApprovalResult:
         url = f"https://api.github.com/repos/{pr.owner}/{pr.repo}/pulls/{pr.number}/reviews"
@@ -23,11 +42,12 @@ class GithubService:
             "Authorization": f"Bearer {self._settings.github_token}",
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
+            "Connection": "close",
         }
         payload = {"event": "APPROVE"}
         try:
             response = self._session.post(
-                url, headers=headers, json=payload, timeout=10
+                url, headers=headers, json=payload, timeout=(5, 20)
             )
             if response.status_code in (200, 201):
                 return ApprovalResult(pr=pr, ok=True, detail="approved")

@@ -16,9 +16,11 @@ app = FastAPI()
 slack_service = SlackService()
 slack_handler = slack_service.get_handler()
 
+
 @app.get("/")
 async def root():
     return "Hello, World!"
+
 
 @app.post("/slack/events")
 async def slack_events(request: Request):
