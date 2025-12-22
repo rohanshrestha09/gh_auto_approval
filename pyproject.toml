@@ -6,7 +6,7 @@ authors = [
     {name = "Rohan Shrestha",email = "rohanshrestha.dev@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard] (>=0.127.0,<0.128.0)",
     "slack-bolt (>=1.27.0,<2.0.0)",
