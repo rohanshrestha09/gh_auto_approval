@@ -15,6 +15,10 @@ app = FastAPI()
 
 slack_service = SlackService()
 slack_request_handler = slack_service.get_request_handler()
+slack_socket_handler = slack_service.get_socket_handler()
+
+
+slack_socket_handler.connect()
 
 
 @app.get("/health")
