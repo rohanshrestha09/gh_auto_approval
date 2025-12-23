@@ -2,6 +2,7 @@ import logging
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 
+from configs.setting import Settings
 from services.slack_service import SlackService
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -15,10 +16,13 @@ app = FastAPI()
 
 slack_service = SlackService()
 slack_request_handler = slack_service.get_request_handler()
-slack_socket_handler = slack_service.get_socket_handler()
+
+settings = Settings.from_env()
 
 
-slack_socket_handler.connect()
+if settings.slack_socket_mode_enabled:
+    slack_socket_handler = slack_service.get_socket_handler()
+    slack_socket_handler.connect()
 
 
 @app.get("/health")

@@ -5,7 +5,7 @@ from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
-from gh_auto_approval.configs.setting import Settings
+from configs.setting import Settings
 from services.github_service import ApprovalResult
 from utils.pr_detector import PullRequestDetector
 from services.github_service import GithubService
@@ -79,4 +79,4 @@ class SlackService:
 
             message_text = self._format_results(results)
             if message_text:
-                say(message_text)
+                say(text=message_text, thread_ts=event.get("thread_ts") or event.get("ts"))

@@ -15,6 +15,7 @@ class Settings:
     slack_signing_secret: str
     slack_app_token: str
     github_token: str
+    slack_socket_mode_enabled: bool
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -23,4 +24,5 @@ class Settings:
             slack_signing_secret=_require_env("SLACK_SIGNING_SECRET"),
             slack_app_token=_require_env("SLACK_APP_TOKEN"),
             github_token=_require_env("GITHUB_TOKEN"),
+            slack_socket_mode_enabled=_require_env("SLACK_SOCKET_MODE_ENABLED").lower() == "true",
         )
