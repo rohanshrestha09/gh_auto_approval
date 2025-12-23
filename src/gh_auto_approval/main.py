@@ -15,12 +15,12 @@ app = FastAPI()
 
 
 slack_service = SlackService()
-slack_handler = slack_service.get_handler()
+slack_request_handler = slack_service.get_request_handler()
 
 
-@app.get("/")
-async def root():
-    return "Hello, World!"
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 
 
 @app.get("/gh")
@@ -40,4 +40,4 @@ async def gh_health():
 
 @app.post("/slack/events")
 async def slack_events(request: Request):
-    return await slack_handler.handle(request)
+    return await slack_request_handler.handle(request)

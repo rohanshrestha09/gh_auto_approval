@@ -4,6 +4,7 @@ from typing import Iterable, List
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 
+from gh_auto_approval.configs.setting import Settings
 from services.github_service import ApprovalResult
 from utils.pr_detector import PullRequestDetector
 from services.github_service import GithubService
@@ -14,10 +15,11 @@ logger = logging.getLogger(__name__)
 class SlackService:
     def __init__(self):
         self._app = App()
+        self._settings = Settings.from_env()
         self._github_service = GithubService()
         self._detector = PullRequestDetector()
 
-    def get_handler(self) -> SlackRequestHandler:
+    def get_request_handler(self) -> SlackRequestHandler:
         self._init_app()
         return SlackRequestHandler(self._app)
 
