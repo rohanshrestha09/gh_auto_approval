@@ -3,6 +3,7 @@ from typing import Iterable, List
 
 from slack_bolt import App
 from slack_bolt.adapter.fastapi import SlackRequestHandler
+from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 from gh_auto_approval.configs.setting import Settings
 from services.github_service import ApprovalResult
@@ -22,6 +23,10 @@ class SlackService:
     def get_request_handler(self) -> SlackRequestHandler:
         self._init_app()
         return SlackRequestHandler(self._app)
+
+    def get_socket_handler(self) -> SocketModeHandler:
+        self._init_app()
+        return SocketModeHandler(self._app, self._settings.slack_app_token)
 
     @staticmethod
     def _format_results(results: List[ApprovalResult]) -> str:
